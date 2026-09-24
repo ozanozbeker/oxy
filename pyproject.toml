@@ -1,0 +1,24 @@
+[project]
+name = "oxy"
+version = "0.1.0"
+description = "Utilities for working with Oxylabs' Web Scraper API."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Ozan Ozbeker", email = "github@ozanozbeker.com" }]
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "prek>=0.5.2",
+  "pyrefly>=1.2.0",
+  "pytest>=9.1.1",
+  "ruff>=0.16.6",
+  "rumdl>=0.2.68",
+  "tombi>=1.5.2",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.18,<0.13.0"]
+build-backend = "uv_build"
