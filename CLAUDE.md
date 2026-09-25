@@ -17,6 +17,10 @@ See `docs/agents/triage-labels.md`.
 The repo is single-context: one `CONTEXT.md` and one `docs/adr/`, both at the root.
 See `docs/agents/domain.md`.
 
+## Oxylabs docs errata
+
+When the live API contradicts the Oxylabs docs, or does something they leave out, add an entry to `ERRATA.md`.
+
 ## Writing
 
 These rules cover every piece of prose I read: docstrings, comments, error messages, config comments, documentation, commit messages, issues and chat.
