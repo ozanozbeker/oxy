@@ -75,6 +75,13 @@ Each entry cites the page as published on 2026-09-25 and links the test behind i
   The account predates 2024-09-25, so newer accounts may differ.
 - **Evidence:** [Deltas](docs/research/live-api.md#deltas).
 
+### File name templating: most variables do not resolve
+
+- **Docs:** [File name templating][file-name-templating] says a name can use "any input parameter you provide when creating a job, as well as any variable from the `job` object", such as `job_id`, `source` and `created_at`.
+- **API:** only `{{ job_id }}`, `{{ source }}`, `{{ query }}` and `{{ extension }}` resolved.
+  `{{ created_at }}`, `{{ url }}`, `{{ geo_location }}`, `{{ client_notes }}` and six other fields stayed in the object name as literal text.
+- **Evidence:** [Variables](docs/research/cloud-storage.md#variables).
+
 ## Behaviour the docs leave out
 
 ### Response Codes: Realtime returns 408 past its TTL
@@ -134,6 +141,50 @@ Each entry cites the page as published on 2026-09-25 and links the test behind i
 - **API:** for a `render: png` job, the content endpoint returned the Base64 string under `content-type: text/html`, not PNG bytes.
 - **Evidence:** [The content endpoint](docs/research/live-api.md#the-content-endpoint).
 
+### Response Codes: the shape of a `statuses` entry
+
+- **Docs:** [Response Codes][response-codes] places upload codes in the `statuses` array, and no page shows an entry.
+  Its Status column gives 13000 as `Upload Success` and 13102 as `No Such Path`.
+- **API:** an upload added `{"event": "GCS_STORAGE_UPLOAD", "code": 13000, "message": "Upload Successful"}`.
+  13102 came with `"message": "No such path"`.
+- **Evidence:** [The `statuses` entry](docs/research/cloud-storage.md#the-statuses-entry).
+
+### Response Codes: `statuses` fills after the job finishes
+
+- **Docs:** [Response Codes][response-codes] says to check `statuses` if results do not reach the bucket, and does not say when the entry appears.
+- **API:** 13 of 25 jobs showed `done` or `faulted` with an empty `statuses` first.
+  A 13000 entry followed within 2.6 seconds, and a 10001 entry after about 20 seconds.
+  `updated_at` did not change when the entry appeared.
+- **Evidence:** [Timing](docs/research/cloud-storage.md#timing).
+
+### Response Codes: an existing object name gives 10001
+
+- **Docs:** [Response Codes][response-codes] lists 13001 Upload Failed and 13103 Access Denied, and does not say what an existing object name gives.
+- **API:** on GCS, an upload to an existing name recorded 10001 `Unexpected Exception` and left the object unchanged.
+  Two jobs in a batch whose names resolve to the same path give the same result for the second job.
+- **Evidence:** [Failures](docs/research/cloud-storage.md#failures) and [Names in a batch](docs/research/cloud-storage.md#names-in-a-batch).
+
+### Cloud Storage: a faulted job uploads too
+
+- **Docs:** [Cloud Storage][cloud-storage] does not say whether Oxylabs uploads a faulted job.
+- **API:** 14 faulted jobs each uploaded an object with a 613 result and recorded 13000.
+  Oxylabs did not bill them.
+- **Evidence:** [Faulted jobs](docs/research/cloud-storage.md#faulted-jobs).
+
+### File name templating: a name without `.{{ extension }}` is a folder
+
+- **Docs:** [File name templating][file-name-templating] shows that a name ending in `/` gets the default name, and does not say what happens to other names.
+- **API:** every `storage_url` that did not end in `.{{ extension }}` became a folder, including `name.json` and `{{ job_id }}`.
+  The API appended `/{{ job_id }}.{{ extension }}` to it.
+- **Evidence:** [Object names](docs/research/cloud-storage.md#object-names).
+
+### Cloud Storage: the object is always JSON, in a shape unlike `/results`
+
+- **Docs:** [File name templating][file-name-templating] gives the default name `{{ job_id }}.{{ extension }}`, and no page says what the object holds.
+- **API:** every object was a JSON document with `results` and `job`, and `{{ extension }}` resolved to `json` for `raw`, `parsed`, `png`, `markdown` and `xhr`.
+  The object drops `type` from each result, gives `parse` as an integer and adds `job.client`, which holds the API username.
+- **Evidence:** [What the object holds](docs/research/cloud-storage.md#what-the-object-holds) and [Output types](docs/research/cloud-storage.md#output-types).
+
 [response-codes]: https://developers.oxylabs.io/products/web-scraper-api/response-codes
 [help-response-codes]: https://developers.oxylabs.io/help-center/troubleshooting/response-codes-for-web-scraper-api
 [integration-methods]: https://developers.oxylabs.io/products/web-scraper-api/integration-methods
@@ -142,3 +193,5 @@ Each entry cites the page as published on 2026-09-25 and links the test behind i
 [quick-start]: https://developers.oxylabs.io/get-started/quick-start-web-scraper-api
 [rate-limits]: https://developers.oxylabs.io/products/web-scraper-api/usage-and-billing/rate-limits
 [usage-statistics]: https://developers.oxylabs.io/products/web-scraper-api/usage-and-billing/usage-statistics
+[cloud-storage]: https://developers.oxylabs.io/products/web-scraper-api/features/result-processing-and-storage/cloud-storage
+[file-name-templating]: https://developers.oxylabs.io/products/web-scraper-api/features/result-processing-and-storage/cloud-storage/file-name-templating
